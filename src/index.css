@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-app: #f1f5f9;
+  --color-card: #ffffff;
+  --color-main: #0f172a;
+  --color-muted: #64748b;
+  --color-subtle: #e2e8f0;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  
+  --font-ui: "Cairo", "Tajawal", sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap');
+
+html, body {
+  background-color: var(--color-app);
+  color: var(--color-main);
+  font-family: var(--font-ui);
+  direction: rtl;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all duration-200 active:scale-95;
+}
+
+.btn-primary {
+  @apply bg-primary text-white shadow-lg hover:bg-primary-dark;
+}
+
+.btn-outline {
+  @apply border-2 border-primary text-primary hover:bg-primary hover:text-white;
+}
+
+.inp {
+  @apply w-full px-4 py-3 rounded-xl border-2 border-subtle bg-card text-main focus:border-primary focus:outline-none transition-colors;
+}

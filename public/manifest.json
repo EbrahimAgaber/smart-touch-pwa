@@ -1,0 +1,10 @@
+{
+  "name": "البصمة الذكية سحابي",
+  "short_name": "البصمة",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#f1f5f9",
+  "description": "لوحة تحكم البصمة الذكية سحابياً",
+  "icons": []
+}
