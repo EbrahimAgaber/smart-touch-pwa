@@ -69,9 +69,11 @@ export default function PairingScreen({ onPaired }) {
               type="text"
               placeholder="رمز الاقتران (8 أحرف)"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
+                setCode(cleaned);
+              }}
               className="inp text-center text-2xl tracking-[0.2em] uppercase font-bold"
-              maxLength={8}
             />
             {error && (
               <p className="text-danger text-sm font-bold text-center mt-2 bg-red-50 p-3 rounded-lg border border-red-200">
