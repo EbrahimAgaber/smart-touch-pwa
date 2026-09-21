@@ -218,7 +218,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
     <div className="flex-1 flex flex-col bg-app">
 
       {/* Header */}
-      <header className="bg-card p-4 shadow-sm flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-card px-4 pb-4 pt-safe shadow-sm flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md overflow-hidden bg-white">
             <img src="/icons/pwa-192x192.png" alt="App Icon" className="w-full h-full object-cover" />
@@ -348,37 +348,39 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
             </div>
 
             {/* Individual Transactions Section */}
-            {!isAllBranches && (
-              <div className="mt-6 space-y-4">
-                <h3 className="text-sm font-bold opacity-80 mb-1 text-main">العمليات الأخيرة</h3>
-                {transactions.length === 0 ? (
-                  <div className="text-center p-4 bg-card rounded-2xl border border-dashed border-subtle text-muted text-sm font-bold">
-                    لا توجد فواتير اليوم
-                  </div>
-                ) : (
-                  <div className="bg-card rounded-2xl p-4 shadow-sm border border-subtle flex flex-col gap-3 max-h-64 overflow-y-auto">
-                    {transactions.map(tx => (
-                      <div key={tx.id} className="flex justify-between items-center border-b border-subtle pb-2 last:border-0 last:pb-0">
-                        <div>
-                          <div className="text-xs font-bold text-main">{tx.invoice_no}</div>
-                          <div className="text-[10px] text-muted">
-                            {new Date(tx.created_at).toLocaleTimeString('ar-SA', { timeZone: 'Asia/Riyadh' })}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <CurrencyDisplay amount={tx.amount} size="sm" color={tx.amount < 0 ? 'danger' : 'default'} />
-                          <div className={`text-[10px] font-bold ${
-                            tx.payment_method?.toLowerCase().includes('card') ? 'text-blue-500' : 'text-green-500'
-                          }`}>
-                            {tx.payment_method?.toLowerCase().includes('card') ? 'شبكة' : 'كاش'}
-                          </div>
+            <div className="mt-6 space-y-4 pb-4">
+              <h3 className="text-sm font-bold opacity-80 mb-1 text-main">العمليات الأخيرة (الفواتير)</h3>
+              {isAllBranches ? (
+                <div className="text-center p-4 bg-card rounded-2xl border border-dashed border-subtle text-muted text-sm font-bold">
+                  الرجاء اختيار فرع محدد لعرض الفواتير والعمليات
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center p-4 bg-card rounded-2xl border border-dashed border-subtle text-muted text-sm font-bold">
+                  لا توجد فواتير اليوم
+                </div>
+              ) : (
+                <div className="bg-card rounded-2xl p-4 shadow-sm border border-subtle flex flex-col gap-3 max-h-64 overflow-y-auto">
+                  {transactions.map(tx => (
+                    <div key={tx.id} className="flex justify-between items-center border-b border-subtle pb-2 last:border-0 last:pb-0">
+                      <div>
+                        <div className="text-xs font-bold text-main">{tx.invoice_no}</div>
+                        <div className="text-[10px] text-muted">
+                          {new Date(tx.created_at).toLocaleTimeString('ar-SA', { timeZone: 'Asia/Riyadh' })}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                      <div className="text-right">
+                        <CurrencyDisplay amount={tx.amount} size="sm" color={tx.amount < 0 ? 'danger' : 'default'} />
+                        <div className={`text-[10px] font-bold ${
+                          tx.payment_method?.toLowerCase().includes('card') ? 'text-blue-500' : 'text-green-500'
+                        }`}>
+                          {tx.payment_method?.toLowerCase().includes('card') ? 'شبكة' : 'كاش'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

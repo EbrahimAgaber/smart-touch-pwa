@@ -25,15 +25,15 @@
    Defined as @utility blocks so Tailwind v4 can generate them.
    ============================================================================ */
 @utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 @utility pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(2rem, calc(0.5rem + env(safe-area-inset-top, 1.5rem)));
 }
 
 @utility h-nav-safe {
-  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  height: calc(64px + env(safe-area-inset-bottom, 16px));
 }
 
 /* P1.5: Main content bottom padding so BottomNav never overlaps content */
@@ -76,6 +76,14 @@ html, body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Fix injected Netlify badges overlapping bottom nav */
+#netlify-badge,
+.netlify-badge,
+div[style*="z-index: 314159"] {
+  display: none !important;
+}
+
 
 /* ============================================================================
    Component classes
