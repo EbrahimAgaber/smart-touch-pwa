@@ -1,35 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap');
 @import "tailwindcss";
 
+/* ============================================================================
+   P1.6: Tailwind v4 @theme — design tokens
+   ============================================================================ */
 @theme {
-  --color-primary: #6366f1;
+  --color-primary:      #6366f1;
   --color-primary-dark: #4f46e5;
-  --color-app: #f1f5f9;
-  --color-card: #ffffff;
-  --color-main: #0f172a;
-  --color-muted: #64748b;
-  --color-subtle: #e2e8f0;
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  
-  --font-ui: "Cairo", "Tajawal", sans-serif;
+  --color-app:          #f1f5f9;
+  --color-card:         #ffffff;
+  --color-main:         #0f172a;
+  --color-muted:        #64748b;
+  --color-subtle:       #e2e8f0;
+  --color-success:      #10b981;
+  --color-danger:       #ef4444;
+
+  /* P1.6: Tailwind v4 requires --font-sans (not --font-ui) */
+  --font-sans: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap');
+/* ============================================================================
+   P1.5 / P1.6: Safe-area utilities (iOS notch + Home Indicator)
+   Defined as @utility blocks so Tailwind v4 can generate them.
+   ============================================================================ */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility h-nav-safe {
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+/* P1.5: Main content bottom padding so BottomNav never overlaps content */
+@utility content-bottom-offset {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* P1.6: dir-ltr was used in JSX but undefined — define it as a real utility */
+@utility dir-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@utility dir-rtl {
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+
+/* ============================================================================
+   Base styles
+   ============================================================================ */
 html, body {
   background-color: var(--color-app);
   color: var(--color-main);
-  font-family: var(--font-ui);
+  font-family: var(--font-sans);
   direction: rtl;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100dvh;  /* dvh respects iOS address bar resize */
   display: flex;
   flex-direction: column;
 }
 
+/* Scrollbar hide utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============================================================================
+   Component classes
+   ============================================================================ */
 .btn {
   @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all duration-200 active:scale-95;
 }
