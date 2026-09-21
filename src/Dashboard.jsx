@@ -67,7 +67,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
       .from('shop_sales_history')
       .select('*')
       .eq('shop_id', shopId)
-      .gte('created_at', today + 'T00:00:00Z')
+      .gte('created_at', today + 'T00:00:00+03:00')
       .order('created_at', { ascending: false })
       .limit(50);
     
