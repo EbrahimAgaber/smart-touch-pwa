@@ -20,7 +20,7 @@ import { useBranchStore } from './store/useBranchStore';
 import { callRpcWithSwr } from './services/swrRpcCache';
 import { todayAST } from './utils/formatters';
 
-export default function Dashboard({ onLogout, isOffline }) {
+export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   const {
     branches, activeContext, activeBranch,
     isAllBranches, switchBranch, refreshBranches
@@ -83,7 +83,22 @@ export default function Dashboard({ onLogout, isOffline }) {
     if (data) setShifts(data);
     setLoading(false);
   }, []);
+  const [inventory,    setInventory]    = useState([]);
+  const [loadingInv,   setLoadingInv]   = useState(false);
+  const [searchInv,    setSearchInv]    = useState('');
 
+  // ── Fetch inventory ───────────────────────────────────────────────────────
+  const fetchInventory = useCallback(async (shopId) => {
+    if (!shopId) return;
+    setLoadingInv(true);
+    const { data } = await supabase
+      .from('shop_inventory_items')
+      .select('*')
+      .eq('shop_id', shopId)
+      .order('name');
+    if (data) setInventory(data);
+    setLoadingInv(false);
+  }, []);
   // ── Effect: load data when branch or tab changes ─────────────────────────
   useEffect(() => {
     if (isAllBranches) {
@@ -92,6 +107,7 @@ export default function Dashboard({ onLogout, isOffline }) {
     } else if (activeContext) {
       fetchLiveStats(activeContext);
       fetchShifts(activeContext);
+      fetchInventory(activeContext);
 
       const channel = supabase.channel(`dashboard-${activeContext}`)
         .on('postgres_changes', {
@@ -102,11 +118,15 @@ export default function Dashboard({ onLogout, isOffline }) {
           event: '*', schema: 'public', table: 'shop_shifts_v2',
           filter: `shop_id=eq.${activeContext}`
         }, () => fetchShifts(activeContext))
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'shop_inventory_items',
+          filter: `shop_id=eq.${activeContext}`
+        }, () => fetchInventory(activeContext))
         .subscribe();
 
       return () => supabase.removeChannel(channel);
     }
-  }, [activeContext, isAllBranches, fetchLiveStats, fetchShifts, fetchConsolidatedStats]);
+  }, [activeContext, isAllBranches, fetchLiveStats, fetchShifts, fetchInventory, fetchConsolidatedStats]);
 
   // ── Default expense shop to active branch ────────────────────────────────
   useEffect(() => {
@@ -336,6 +356,10 @@ export default function Dashboard({ onLogout, isOffline }) {
                       <div className="text-left">
                         <div className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">إجمالي المبيعات</div>
                         <CurrencyDisplay amount={shift.total_sales} size="lg" color="default" />
+                        <div className="mt-1 flex gap-2 justify-end text-[10px] text-muted">
+                          <span>كاش: {shift.cash_sales}</span>
+                          <span>شبكة: {shift.card_sales}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -425,11 +449,44 @@ export default function Dashboard({ onLogout, isOffline }) {
           </form>
         )}
 
-        {/* ── Inventory Tab (P2 placeholder) ─────────────────────────── */}
+        {/* ── Inventory Tab ─────────────────────────────────────────── */}
         {activeTab === 'inventory' && (
-          <div className="text-center p-10 bg-card rounded-2xl border border-dashed border-subtle">
-            <p className="text-4xl mb-4">📦</p>
-            <p className="text-muted font-bold">مزامنة المخزون قادمة قريباً (P2)</p>
+          <div className="space-y-4">
+            <h3 className="text-lg font-black text-main mb-4">المخزون</h3>
+            
+            <input
+              type="text"
+              placeholder="ابحث عن منتج..."
+              value={searchInv}
+              onChange={e => setSearchInv(e.target.value)}
+              className="inp w-full font-bold mb-4"
+            />
+            
+            {loadingInv ? (
+              <div className="text-center p-10 text-muted">جاري تحميل المخزون...</div>
+            ) : inventory.length === 0 ? (
+              <div className="text-center p-10 bg-card rounded-2xl border border-dashed border-subtle">
+                <p className="text-4xl mb-4">📦</p>
+                <p className="text-muted font-bold">لم تتم مزامنة المخزون بعد من الكاشير.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
+                {inventory.filter(item => item.name.includes(searchInv) || (item.barcode && item.barcode.includes(searchInv))).map(item => (
+                  <div key={item.id} className="bg-card rounded-xl p-4 shadow-sm border border-subtle flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-main">{item.name}</div>
+                      {item.barcode && <div className="text-[10px] font-mono text-muted">{item.barcode}</div>}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className={`text-sm font-black ${item.stock <= item.min_stock_level ? 'text-danger' : 'text-success'}`}>
+                        {item.stock} حبة
+                      </div>
+                      <CurrencyDisplay amount={item.price} size="sm" color="default" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -451,9 +508,12 @@ export default function Dashboard({ onLogout, isOffline }) {
               </button>
             ))}
 
-            <p className="text-center text-xs text-muted pt-2">
-              لإضافة فرع جديد، انتقل إلى إعدادات الكاشير وولّد رمز اقتران جديد
-            </p>
+            <button
+              onClick={onAddBranch}
+              className="w-full mt-4 btn btn-primary flex justify-center py-3 text-base shadow-sm"
+            >
+              ➕ إضافة فرع جديد
+            </button>
           </div>
         )}
 

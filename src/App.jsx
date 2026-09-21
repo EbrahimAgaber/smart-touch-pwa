@@ -25,6 +25,7 @@ function App() {
   const [loading,    setLoading]    = useState(true);
   const [authError,  setAuthError]  = useState(null);
   const [isOffline,  setIsOffline]  = useState(!navigator.onLine);
+  const [addingBranch, setAddingBranch] = useState(false);
 
   // P0.9: Track online/offline transitions
   useEffect(() => {
@@ -171,7 +172,17 @@ function App() {
         )}
 
         {hasLicense ? (
-          <Dashboard onLogout={handleLogout} isOffline={isOffline} />
+          addingBranch ? (
+            <PairingScreen
+              onPaired={() => {
+                checkLicenses();
+                setAddingBranch(false);
+              }}
+              onCancel={() => setAddingBranch(false)}
+            />
+          ) : (
+            <Dashboard onLogout={handleLogout} isOffline={isOffline} onAddBranch={() => setAddingBranch(true)} />
+          )
         ) : (
           <PairingScreen onPaired={checkLicenses} />
         )}

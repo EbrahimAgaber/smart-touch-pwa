@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { supabase } from './supabase';
 import { Smartphone, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function PairingScreen({ onPaired }) {
+export default function PairingScreen({ onPaired, onCancel }) {
   const [code,      setCode]      = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
@@ -88,6 +88,14 @@ export default function PairingScreen({ onPaired }) {
 
   return (
     <div className="flex-1 flex flex-col p-6">
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          className="self-end mb-4 px-4 py-2 text-sm font-bold text-muted bg-card border border-subtle rounded-full hover:bg-subtle transition-colors"
+        >
+          &larr; رجوع
+        </button>
+      )}
       <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
         <div className="text-center mb-10">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-3xl flex items-center justify-center text-4xl shadow-xl mx-auto mb-6">
