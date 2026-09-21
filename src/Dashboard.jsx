@@ -29,6 +29,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   const [shifts,       setShifts]       = useState([]);
   const [liveStats,    setLiveStats]     = useState(null);
   const [execStats,    setExecStats]     = useState(null);
+  const [transactions, setTransactions]  = useState([]);
   const [loading,      setLoading]       = useState(true);
   const [activeTab,    setActiveTab]     = useState('live');
   const [lastSyncTime, setLastSyncTime]  = useState(null);
@@ -57,6 +58,21 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
       setLastSyncTime(new Date());
     } else {
       setLiveStats({ total_sales: 0, cash_sales: 0, card_sales: 0, total_expenditures: 0, order_count: 0 });
+    }
+  }, [today]);
+
+  const fetchTransactions = useCallback(async (shopId) => {
+    if (!shopId) return;
+    const { data } = await supabase
+      .from('shop_sales_history')
+      .select('*')
+      .eq('shop_id', shopId)
+      .gte('created_at', today + 'T00:00:00Z')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (data) {
+      setTransactions(data);
     }
   }, [today]);
 
@@ -106,6 +122,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
       setLoading(false);
     } else if (activeContext) {
       fetchLiveStats(activeContext);
+      fetchTransactions(activeContext);
       fetchShifts(activeContext);
       fetchInventory(activeContext);
 
@@ -114,6 +131,10 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
           event: '*', schema: 'public', table: 'shop_live_stats',
           filter: `shop_id=eq.${activeContext}`
         }, () => fetchLiveStats(activeContext))
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'shop_sales_history',
+          filter: `shop_id=eq.${activeContext}`
+        }, () => fetchTransactions(activeContext))
         .on('postgres_changes', {
           event: '*', schema: 'public', table: 'shop_shifts_v2',
           filter: `shop_id=eq.${activeContext}`
@@ -126,7 +147,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
 
       return () => supabase.removeChannel(channel);
     }
-  }, [activeContext, isAllBranches, fetchLiveStats, fetchShifts, fetchInventory, fetchConsolidatedStats]);
+  }, [activeContext, isAllBranches, fetchLiveStats, fetchTransactions, fetchShifts, fetchInventory, fetchConsolidatedStats]);
 
   // ── Default expense shop to active branch ────────────────────────────────
   useEffect(() => {
@@ -325,6 +346,39 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                 </div>
               )}
             </div>
+
+            {/* Individual Transactions Section */}
+            {!isAllBranches && (
+              <div className="mt-6 space-y-4">
+                <h3 className="text-sm font-bold opacity-80 mb-1 text-main">العمليات الأخيرة</h3>
+                {transactions.length === 0 ? (
+                  <div className="text-center p-4 bg-card rounded-2xl border border-dashed border-subtle text-muted text-sm font-bold">
+                    لا توجد فواتير اليوم
+                  </div>
+                ) : (
+                  <div className="bg-card rounded-2xl p-4 shadow-sm border border-subtle flex flex-col gap-3 max-h-64 overflow-y-auto">
+                    {transactions.map(tx => (
+                      <div key={tx.id} className="flex justify-between items-center border-b border-subtle pb-2 last:border-0 last:pb-0">
+                        <div>
+                          <div className="text-xs font-bold text-main">{tx.invoice_no}</div>
+                          <div className="text-[10px] text-muted">
+                            {new Date(tx.created_at).toLocaleTimeString('ar-SA', { timeZone: 'Asia/Riyadh' })}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <CurrencyDisplay amount={tx.amount} size="sm" color={tx.amount < 0 ? 'danger' : 'default'} />
+                          <div className={`text-[10px] font-bold ${
+                            tx.payment_method?.toLowerCase().includes('card') ? 'text-blue-500' : 'text-green-500'
+                          }`}>
+                            {tx.payment_method?.toLowerCase().includes('card') ? 'شبكة' : 'كاش'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
