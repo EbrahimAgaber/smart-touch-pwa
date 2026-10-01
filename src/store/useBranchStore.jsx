@@ -72,6 +72,11 @@ export function BranchProvider({ children }) {
               : false,
           }));
         dispatch({ type: 'SET_BRANCHES', payload: branches });
+        const currentContext = localStorage.getItem(STORAGE_KEY);
+        if (branches.length === 1 && (!currentContext || currentContext === 'all')) {
+          localStorage.setItem(STORAGE_KEY, branches[0].shop_id);
+          dispatch({ type: 'SET_ACTIVE', payload: branches[0].shop_id });
+        }
         return;
       }
 
@@ -89,6 +94,11 @@ export function BranchProvider({ children }) {
           is_online: false,
         }));
         dispatch({ type: 'SET_BRANCHES', payload: branches });
+        const currentContext = localStorage.getItem(STORAGE_KEY);
+        if (branches.length === 1 && (!currentContext || currentContext === 'all')) {
+          localStorage.setItem(STORAGE_KEY, branches[0].shop_id);
+          dispatch({ type: 'SET_ACTIVE', payload: branches[0].shop_id });
+        }
       } else {
         dispatch({ type: 'SET_ERROR', payload: licErr?.message || 'فشل تحميل الفروع' });
       }
@@ -121,6 +131,7 @@ export function BranchProvider({ children }) {
   return <BranchContext.Provider value={value}>{children}</BranchContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBranchStore() {
   const ctx = useContext(BranchContext);
   if (!ctx) throw new Error('useBranchStore must be used within BranchProvider');

@@ -20,7 +20,7 @@ import { BranchProvider } from './store/useBranchStore';
 import { Loader2, WifiOff } from 'lucide-react';
 
 function App() {
-  const [session,    setSession]    = useState(null);
+  const [_session,   setSession]    = useState(null);
   const [hasLicense, setHasLicense] = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [authError,  setAuthError]  = useState(null);

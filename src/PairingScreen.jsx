@@ -10,7 +10,7 @@
  */
 import { useState } from 'react';
 import { supabase } from './supabase';
-import { Smartphone, CheckCircle2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function PairingScreen({ onPaired, onCancel }) {
   const [code,      setCode]      = useState('');
@@ -119,6 +119,13 @@ export default function PairingScreen({ onPaired, onCancel }) {
                 // P0.2: digits only, max 6 chars
                 const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
                 setCode(cleaned);
+                // Auto-submit when all 6 digits are entered
+                if (cleaned.length === 6) {
+                  setTimeout(() => {
+                    const btn = document.getElementById('pair-submit-btn');
+                    if (btn && !btn.disabled) btn.click();
+                  }, 150);
+                }
               }}
               className="inp text-center text-3xl tracking-[0.4em] font-bold font-mono"
               maxLength={6}
@@ -132,6 +139,7 @@ export default function PairingScreen({ onPaired, onCancel }) {
           </div>
 
           <button
+            id="pair-submit-btn"
             type="submit"
             disabled={loading || code.length < 6}
             className="btn btn-primary w-full text-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"

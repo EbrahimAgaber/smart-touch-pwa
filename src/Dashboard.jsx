@@ -11,8 +11,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabase';
 import {
-  RefreshCw, Store, LogOut, TrendingUp, TrendingDown,
-  AlertTriangle, Wifi, WifiOff
+  Store, LogOut, TrendingUp,
+  Wifi, WifiOff
 } from 'lucide-react';
 import { CurrencyDisplay } from './components/CurrencyDisplay';
 import { BottomNav } from './components/BottomNav';
@@ -23,7 +23,7 @@ import { todayAST } from './utils/formatters';
 export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   const {
     branches, activeContext, activeBranch,
-    isAllBranches, switchBranch, refreshBranches
+    isAllBranches, switchBranch
   } = useBranchStore();
 
   const [shifts,       setShifts]       = useState([]);
@@ -39,6 +39,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   const [expenseDesc,   setExpenseDesc]   = useState('');
   const [expenseShopId, setExpenseShopId] = useState('');
   const [addingExpense, setAddingExpense] = useState(false);
+  const [expenseMsg, setExpenseMsg] = useState({ type: '', text: '' });
 
   // ── P0.8: Date helper ────────────────────────────────────────────────────
   const today = todayAST();
@@ -119,6 +120,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   useEffect(() => {
     if (isAllBranches) {
       fetchConsolidatedStats();
+      // eslint-disable-next-line react/set-state-in-effect
       setLoading(false);
     } else if (activeContext) {
       fetchLiveStats(activeContext);
@@ -152,6 +154,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
   // ── Default expense shop to active branch ────────────────────────────────
   useEffect(() => {
     if (!isAllBranches && activeContext) {
+      // eslint-disable-next-line react/set-state-in-effect
       setExpenseShopId(activeContext);
     } else if (branches.length > 0) {
       setExpenseShopId(branches[0].shop_id);
@@ -163,6 +166,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
     e.preventDefault();
     if (!expenseAmount || !expenseDesc || !expenseShopId) return;
     setAddingExpense(true);
+    setExpenseMsg({ type: '', text: '' });
 
     try {
       // P1.1: add_remote_expense_v2 requires explicit p_shop_id (UUID)
@@ -188,9 +192,10 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
 
       setExpenseAmount('');
       setExpenseDesc('');
-      alert('✅ تم إضافة المصروف بنجاح. سيظهر في نقطة البيع قريباً.');
+      setExpenseMsg({ type: 'success', text: '✅ تم إضافة المصروف بنجاح. سيظهر في نقطة البيع قريباً.' });
+      setTimeout(() => setExpenseMsg({ type: '', text: '' }), 4000);
     } catch (err) {
-      alert('⚠️ حدث خطأ: ' + err.message);
+      setExpenseMsg({ type: 'error', text: '⚠️ حدث خطأ: ' + err.message });
     } finally {
       setAddingExpense(false);
     }
@@ -203,10 +208,6 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
 
   const aov = stats?.order_count > 0
     ? (stats.total_sales / stats.order_count)
-    : 0;
-
-  const netRevenue = stats
-    ? (stats.total_sales || 0) - (stats.total_expenditures || 0)
     : 0;
 
   const syncLabel = lastSyncTime
@@ -278,7 +279,15 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
 
             {/* Sync timestamp */}
             {syncLabel && (
-              <p className="text-[11px] text-muted text-center font-medium">{syncLabel}</p>
+              <button
+                onClick={() => {
+                  if (isAllBranches) fetchConsolidatedStats();
+                  else if (activeContext) { fetchLiveStats(activeContext); fetchTransactions(activeContext); }
+                }}
+                className="text-[11px] text-primary text-center font-medium w-full underline-offset-2 hover:underline"
+              >
+                {syncLabel} · اضغط للتحديث
+              </button>
             )}
 
             {/* Hero sales card */}
@@ -360,7 +369,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                 </div>
               ) : (
                 <div className="bg-card rounded-2xl p-4 shadow-sm border border-subtle flex flex-col gap-3 max-h-64 overflow-y-auto">
-                  {transactions.map(tx => (
+                  {[...new Map(transactions.map(t => [t.id, t])).values()].map(tx => (
                     <div key={tx.id} className="flex justify-between items-center border-b border-subtle pb-2 last:border-0 last:pb-0">
                       <div>
                         <div className="text-xs font-bold text-main">{tx.invoice_no}</div>
@@ -371,9 +380,9 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                       <div className="text-right">
                         <CurrencyDisplay amount={tx.amount} size="sm" color={tx.amount < 0 ? 'danger' : 'default'} />
                         <div className={`text-[10px] font-bold ${
-                          tx.payment_method?.toLowerCase().includes('card') ? 'text-blue-500' : 'text-green-500'
+                          ['card', 'visa', 'mastercard', 'mada', 'مدى', 'شبكة', 'network'].some(k => tx.payment_method?.toLowerCase().includes(k)) ? 'text-blue-500' : 'text-green-500'
                         }`}>
-                          {tx.payment_method?.toLowerCase().includes('card') ? 'شبكة' : 'كاش'}
+                          {['card', 'visa', 'mastercard', 'mada', 'مدى', 'شبكة', 'network'].some(k => tx.payment_method?.toLowerCase().includes(k)) ? 'شبكة' : 'كاش'}
                         </div>
                       </div>
                     </div>
@@ -413,8 +422,8 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                         <div className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">إجمالي المبيعات</div>
                         <CurrencyDisplay amount={shift.total_sales} size="lg" color="default" />
                         <div className="mt-1 flex gap-2 justify-end text-[10px] text-muted">
-                          <span>كاش: {shift.cash_sales}</span>
-                          <span>شبكة: {shift.card_sales}</span>
+                          <span className="dir-ltr">كاش: <CurrencyDisplay amount={shift.cash_sales || 0} size="xs" color="muted" /></span>
+                          <span className="dir-ltr">شبكة: <CurrencyDisplay amount={shift.card_sales || 0} size="xs" color="muted" /></span>
                         </div>
                       </div>
                     </div>
@@ -494,6 +503,14 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                 />
               </div>
 
+              {expenseMsg.text && (
+                <div className={`p-3 rounded-xl text-sm font-bold text-center ${
+                  expenseMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  {expenseMsg.text}
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={addingExpense || !expenseShopId}
@@ -563,6 +580,14 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
                 </div>
               </button>
             ))}
+
+            {branches.length === 0 && (
+              <div className="text-center p-10 bg-card rounded-2xl border border-dashed border-subtle">
+                <p className="text-4xl mb-4">🏪</p>
+                <p className="font-bold text-main mb-2">لا توجد فروع مرتبطة بعد</p>
+                <p className="text-sm text-muted">اضغط على "إضافة فرع جديد" للبدء</p>
+              </div>
+            )}
 
             <button
               onClick={onAddBranch}
