@@ -52,10 +52,7 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
       .select('*')
       .eq('shop_id', shopId)
       .eq('date', today)   // P0.8: AST date
-      .single()
-      .throwOnError();
-// NOTE: The service worker bypass is handled by adding a custom header.
-// Wrap the call to pass cache: 'no-store' via the Supabase fetch options:
+      .single();
 
     if (data) {
       setLiveStats(data);
