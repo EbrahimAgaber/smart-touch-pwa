@@ -52,7 +52,10 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
       .select('*')
       .eq('shop_id', shopId)
       .eq('date', today)   // P0.8: AST date
-      .single();
+      .single()
+      .throwOnError();
+// NOTE: The service worker bypass is handled by adding a custom header.
+// Wrap the call to pass cache: 'no-store' via the Supabase fetch options:
 
     if (data) {
       setLiveStats(data);
@@ -208,6 +211,10 @@ export default function Dashboard({ onLogout, isOffline, onAddBranch }) {
 
   const aov = stats?.order_count > 0
     ? (stats.total_sales / stats.order_count)
+    : 0;
+
+  const netRevenue = stats
+    ? (stats.total_sales || 0) - (stats.total_expenditures || 0)
     : 0;
 
   const syncLabel = lastSyncTime

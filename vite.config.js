@@ -70,7 +70,7 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-bootstrap-cache',
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 8,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 * 7  // 7 days
@@ -80,14 +80,14 @@ export default defineConfig({
           },
           // Supabase daily stats + shift endpoints: NetworkFirst, 3 days stale
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/(?:shop_live_stats|shop_shifts|shop_shifts_v2).*/i,
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/(?:shop_shifts|shop_shifts_v2|shop_sales_history).*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-stats-cache',
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 3  // 3 days
+                maxAgeSeconds: 60 * 60 * 1  // 1 hour — live stats must stay fresh
               },
               cacheableResponse: { statuses: [0, 200] }
             }

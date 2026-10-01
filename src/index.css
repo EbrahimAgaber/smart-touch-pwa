@@ -38,7 +38,7 @@
 
 /* P1.5: Main content bottom padding so BottomNav never overlaps content */
 @utility content-bottom-offset {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }
 
 /* P1.6: dir-ltr was used in JSX but undefined — define it as a real utility */
@@ -61,13 +61,13 @@ html, body {
   font-family: var(--font-sans);
   direction: rtl;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
 }
 
 #root {
   min-height: 100dvh;  /* dvh respects iOS address bar resize */
   display: flex;
   flex-direction: column;
+  overscroll-behavior-y: none;
 }
 
 /* Scrollbar hide utility */
